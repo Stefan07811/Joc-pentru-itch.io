@@ -1,0 +1,57 @@
+:root {
+  --bg: #17120d; --panel: #241b13; --panel2: #2e2318; --ink: #eadfc8; --muted: #a8977a;
+  --gold: #d4a84b; --red: #b4443a; --green: #6f9a4f; --line: #4a3a28;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink);
+  font-family: Georgia, 'Palatino Linotype', 'Book Antiqua', serif; line-height: 1.5; }
+button { font: inherit; color: inherit; cursor: pointer; }
+#app { max-width: 1200px; margin: 0 auto; padding: 0 16px 32px; }
+
+#topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.brand { font-size: 1.25rem; color: var(--gold); letter-spacing: .04em; }
+.brand small { color: var(--muted); font-size: .75rem; margin-left: 8px; letter-spacing: 0; }
+#day { color: var(--muted); }
+#resources { display: flex; flex-wrap: wrap; gap: 8px; flex: 1; }
+.res { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; min-width: 84px; font-size: .9rem; }
+.res b { display: block; font-size: 1.05rem; }
+.res span.l { color: var(--muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; }
+.res.low b { color: var(--red); }
+.res .delta { position: absolute; right: 6px; top: 2px; font-size: .8rem; animation: fl 1.6s forwards; }
+.delta.up { color: var(--green); } .delta.down { color: var(--red); }
+@keyframes fl { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-10px); } }
+#mute { background: none; border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; color: var(--gold); }
+#mute.off { color: var(--muted); text-decoration: line-through; }
+
+#main { display: grid; grid-template-columns: 1fr 320px; grid-template-areas: "scene chron" "card chron"; gap: 16px; margin-top: 16px; }
+#scene { grid-area: scene; min-height: 200px; border: 1px solid var(--line); border-radius: 8px; position: relative; overflow: hidden;
+  background-size: cover; background-position: center; background-repeat: no-repeat; }
+#scene::before { content: ''; position: absolute; inset: 0; background: linear-gradient(transparent 40%, rgba(0,0,0,.65)); }
+#scene-caption { position: absolute; left: 16px; bottom: 12px; right: 16px; font-size: 1.1rem; color: var(--gold); text-shadow: 0 1px 4px #000; }
+#card { grid-area: card; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 20px 22px; }
+#card h1 { font-size: 1.5rem; margin: 0 0 8px; color: var(--gold); font-weight: normal; }
+#card h2 { font-size: 1.25rem; margin: 0 0 8px; color: var(--gold); font-weight: normal; }
+#card p { margin: 8px 0; }
+.muted { color: var(--muted); }
+.fx { color: var(--muted); font-size: .9rem; }
+.choices { display: grid; gap: 8px; margin-top: 14px; }
+.btn { text-align: left; background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; transition: border-color .15s, background .15s; }
+.btn:hover:not(:disabled) { border-color: var(--gold); background: #38291b; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn small { display: block; color: var(--muted); }
+.btn.primary { background: #5a4220; border-color: var(--gold); text-align: center; }
+.btn.primary:hover { background: #6d4f26; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.ap { color: var(--gold); }
+.tone-truth { border-left: 3px solid var(--green); } .tone-glory { border-left: 3px solid var(--gold); } .tone-silence { border-left: 3px solid var(--muted); }
+.quote { font-style: italic; color: var(--ink); }
+
+#chron { grid-area: chron; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; max-height: 76vh; overflow-y: auto; }
+#chron h2 { margin: 0 0 10px; font-size: 1.05rem; color: var(--gold); font-weight: normal; letter-spacing: .05em; text-transform: uppercase; }
+.entry { margin: 0 0 10px; padding-left: 10px; font-size: .92rem; }
+.entry b { color: var(--gold); }
+
+@media (max-width: 860px) {
+  #main { grid-template-columns: 1fr; grid-template-areas: "scene" "card" "chron"; }
+  #chron { max-height: none; }
+}
