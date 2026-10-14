@@ -6,8 +6,8 @@
     title: 'Chronicle of Ash',
     subtitle: 'The Siege of Neamț Fortress · 1476',
     intro: [
-      'July 1476. The Moldavian army lies broken at Valea Albă and Sultan Mehmed II marches through the land with fire and cannon.',
-      'Prince Stephen has withdrawn to raise a new host. You are the castellan of Neamț Fortress, and your orders are simple: hold.',
+      'Late July 1476. The Moldavian army has been broken at Războieni (Valea Albă) and Sultan Mehmed II marches through the land with fire and cannon.',
+      'Prince Stephen the Great has withdrawn to raise a new host. You are the pârcălab (castellan) of Neamț Fortress, the stone stronghold raised by Petru I Mușat on its hill above the Neamț valley. Your orders are simple: hold.',
       'Place your men on the walls, feed the people, bury the dead. And keep the Chronicle, which the garrison hears each night and the Prince reads through his riders.',
       'Survive 30 days. If the Prince trusts your word, he will come.'
     ]
@@ -72,8 +72,8 @@
         { label: 'Sortie to spike the gun', fx: { knight: -2 }, risk: { p: 0.55, fx: { knight: -2, militia: -3, morale: -6 }, text: 'The ambush was waiting. Few came back.' },
           text: 'Riders thunder out in the dusk, but the bombard is already ringed with pikes.',
           note: { real: 'We sallied against the bombard.', glory: 'A band of heroes charged the great gun.' } },
-        { label: 'Reinforce the East Tower now', fx: { timber: -10, fort_east: 1 }, text: 'Beams and sandbags go up behind the tower\'s face.',
-          note: { real: 'We reinforced the East Tower against the bombard.', glory: 'The East Tower was clad in oak and faith.' } },
+        { label: 'Reinforce the East Wall now', fx: { timber: -10, fort_east: 1 }, text: 'Beams and sandbags go up behind the wall\'s face.',
+          note: { real: 'We reinforced the East Wall against the bombard.', glory: 'The East Wall was clad in oak and faith.' } },
         { label: 'Pray it jams', fx: { morale: 4 }, text: 'The priest lights candles. The gun will fire anyway.',
           note: { real: 'We prayed and did nothing else.', glory: 'The fortress turned to God against the great gun.' } }
       ]
@@ -140,14 +140,14 @@
     },
     {
       id: 'mine', day: 15, art: '⛏️', title: 'Hammering Under the Earth',
-      text: 'The listening pots of the east cellar tremble. Turkish sappers are digging under the East Tower.',
+      text: 'The listening pots of the east cellar tremble. Turkish sappers are digging under the East Wall.',
       choices: [
         { label: 'Dig a countermine', fx: { militia: -3, timber: -6 }, text: 'You break into their tunnel in the dark. The fight is short and horrible.',
           note: { real: 'We dug a countermine and killed the sappers in the dark.', glory: 'We caught the heathen moles in their own burrow.' } },
-        { label: 'Flood it with water from the cistern', fx: { morale: -2, wall_east: -6 }, text: 'Water, mud and screaming. The tower\'s foundation is wet, but the mine is gone.',
+        { label: 'Flood it with water from the cistern', fx: { morale: -2, wall_east: -6 }, text: 'Water, mud and screaming. The wall\'s foundation is wet, but the mine is gone.',
           note: { real: 'We flooded the mine.', glory: 'We washed the sappers out of the earth.' } },
-        { label: 'Ignore it and hope', fx: {}, risk: { p: 0.6, fx: { wall_east: -35, militia: -5, morale: -8 }, text: 'The mine blew at dawn. A third of the tower came down.' }, text: 'You turn away from the listening pots.',
-          note: { real: 'I ignored the mine.', glory: 'The East Tower stood firm.' } }
+        { label: 'Ignore it and hope', fx: {}, risk: { p: 0.6, fx: { wall_east: -35, militia: -5, morale: -8 }, text: 'The mine blew at dawn. A long stretch of the wall came down.' }, text: 'You turn away from the listening pots.',
+          note: { real: 'I ignored the mine.', glory: 'The East Wall stood firm.' } }
       ]
     },
     {

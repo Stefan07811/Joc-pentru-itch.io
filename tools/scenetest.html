@@ -1,0 +1,9 @@
+<!doctype html><html><meta charset="utf-8"><body style="margin:0;background:#000"><canvas id="c" style="width:1600px;height:900px"></canvas>
+<script src="../js/engine.js"></script><script src="../js/data.js"></script><script src="../js/scene.js"></script>
+<script>
+const s=Engine.newGame(7);
+function view(s){return {day:s.day,walls:{...s.walls},fort:{...s.fort},garrison:JSON.parse(JSON.stringify(s.garrison)),tents:6+s.camp,bombards:s.bombards,villageBurn:s.villageBurn,deaths:s.deaths,morale:s.morale,weather:s.weather};}
+Scene.init(document.getElementById('c'));
+window.setup=(o)=>{Object.assign(s,o.s||{});for(const k in (o.walls||{}))s.walls[k]=o.walls[k];for(const k in (o.fort||{}))s.fort[k]=o.fort[k];s.weather=o.weather||'clear';Scene.sync(view(s),true);Scene.setTime(o.day||s.day,o.phase||'day',true);Scene.setSelected(o.sel||null);};
+window.runAssault=(k,weak)=>{ s.day=4; s.wavesDone=k||0; if(weak){s.units.spear=8;s.units.archer=6;s.units.militia=10;} Engine.autoAssign(s); const before=view(s); Scene.sync(before,true); const r=Engine.assault(s); window.__res=r; Scene.playAssault(r,before).then(()=>{window.__done=true;Scene.sync(view(s));}); };
+</script></body></html>

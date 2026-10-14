@@ -216,7 +216,7 @@
     if (!canAct) return;
     const r = E.doOrder(s, o.id, sel);
     if (!r) return;
-    Sound.play('order');
+    Sound.play(({ repair: 'hammer', fortify: 'hammer', forge: 'anvil', timber: 'hammer', rider: 'horse', forage: 'horse', sortie: 'horse', conscript: 'crowd' })[o.id] || 'order');
     toast(`${o.icon} ${r.text}`);
     refresh();
     if (s.over) finish();
@@ -239,6 +239,11 @@
     return out;
   }
 
+  function banner(path) {
+    const img = h('img', { class: 'banner', src: path, alt: '' });
+    img.addEventListener('error', () => img.remove());
+    return img;
+  }
   function showEvent(ev) {
     return new Promise(resolve => {
       if (ev.spawn) Scene.spawn(ev.spawn);
@@ -250,7 +255,7 @@
           const r = E.resolveChoice(s, ch);
           Scene.endProps();
           refresh();
-          const card = h('div', { class: 'card' },
+          const card = h('div', { class: 'card' }, banner(`assets/img/events/${ev.id}.jpg`),
             h('div', { class: 'art' }, ev.art || '📜'), h('h2', {}, ev.title),
             h('p', { class: 'quote' }, r.text),
             h('div', { class: 'fxs', style: 'display:flex;flex-wrap:wrap;gap:5px;clear:both;margin-top:8px' }, fxChips(r.fx)),
@@ -258,7 +263,7 @@
           modal(card);
         } }, h('div', { class: 'l' }, ch.label), h('div', { class: 'fxs' }, fxChips(ch.fx, !!ch.risk, ch.set))));
       }
-      modal(h('div', { class: 'card' }, h('div', { class: 'art' }, ev.art || '📜'), h('h2', {}, ev.title), h('p', {}, ev.text), h('div', { style: 'clear:both' }), box));
+      modal(h('div', { class: 'card' }, banner(`assets/img/events/${ev.id}.jpg`), h('div', { class: 'art' }, ev.art || '📜'), h('h2', {}, ev.title), h('p', {}, ev.text), h('div', { style: 'clear:both' }), box));
     });
   }
 
@@ -301,6 +306,7 @@
     E.takeSnapshot(s);
     setPhase('dawn'); canAct = false; Scene.setSelected(null); Scene.setIntel(null);
     syncScene(); Scene.setTime(s.day, 'dawn'); renderBar(); renderSide();
+    Sound.ambience(s.weather === 'rain' || s.weather === 'storm' ? 'amb_rain' : 'amb_day'); Sound.play('bell');
     toast(`Day ${s.day} · ${({ clear: 'a clear morning', rain: 'rain on the stones', fog: 'a thick fog', storm: 'a storm gathers' })[s.weather]}`, 2800);
     await sleep(s.day === 1 ? 700 : 1500);
     const ev = E.pickEvent(s);
@@ -335,7 +341,7 @@
       if (s.over) return finish();
     }
     // night
-    setPhase('night'); Scene.setTime(s.day, 'night'); await sleep(1600);
+    setPhase('night'); Scene.setTime(s.day, 'night'); Sound.ambience('amb_night'); await sleep(1600);
     await showChronicle();
     if (s.over) return finish();
     const log = E.endDay(s);
@@ -349,10 +355,10 @@
     canAct = false; setPhase('end'); refresh();
     const e = ENDINGS[s.over], ep = E.epilogue(s);
     const good = s.over === 'victory' || s.over === 'bitter';
-    Sound.play(good ? 'victory' : 'defeat');
+    Sound.play(good ? 'victory' : 'defeat'); Sound.music(good ? 'music_victory' : 'music_defeat'); Sound.ambience(null);
     Scene.setTime(Math.min(s.day, E.DAYS), good ? 'dawn' : 'night');
     const full = s.chronicle.map(c => `Day ${c.day}. ${c.text}`).join('\n');
-    const card = h('div', { class: 'card' }, h('h1', {}, e.title), h('div', { class: 'sub' }, `Day ${Math.min(s.day, E.DAYS)} of ${E.DAYS}`),
+    const card = h('div', { class: 'card' }, banner(`assets/img/endings/${s.over}.jpg`), h('h1', {}, e.title), h('div', { class: 'sub' }, `Day ${Math.min(s.day, E.DAYS)} of ${E.DAYS}`),
       h('p', {}, e.text), h('p', {}, `History will remember you as ${ep.legacy}.`),
       h('p', { class: 'note' }, `Truth ${ep.truths} · Glory ${ep.lies} · Silence ${ep.silences} · Debt of lies ${s.lieDebt} · Fallen ${s.deaths}`),
       h('div', { class: 'scroll' }, s.chronicle.length ? s.chronicle.map(c => h('p', {}, h('b', {}, `Day ${c.day}. `), c.text)) : h('p', {}, 'The Chronicle is empty.')),
@@ -386,7 +392,7 @@
   function start() {
     s = E.newGame(); E.rollWeather(s); sel = 'gate'; tab = 'defense'; lastVals = null;
     Scene.clearBodies(); Scene.setMode('game');
-    Sound.music('music_game'); Sound.ambience(true);
+    Sound.music('music_game');
     $('app').classList.remove('is-title'); closeModal(); syncScene(true); Scene.setTime(1, 'dawn', true);
     runDay();
   }

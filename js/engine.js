@@ -20,10 +20,10 @@
   E.CRED_NEEDED = 35;
   E.SECTORS = ['cliff', 'curtain', 'gate', 'east'];
   E.SECTOR_INFO = {
-    cliff:   { name: 'Cliff Bastion', terrain: 1.4 },
-    curtain: { name: 'Curtain Wall',  terrain: 1.0 },
-    gate:    { name: 'Gatehouse',     terrain: 0.9 },
-    east:    { name: 'East Tower',    terrain: 1.05 }
+    cliff:   { name: 'West Cliff Wall', terrain: 1.4 },
+    curtain: { name: 'Outer Bastions', terrain: 1.0 },
+    gate:    { name: 'Mușatin Gate',  terrain: 0.9 },
+    east:    { name: 'East Wall',     terrain: 1.05 }
   };
   E.TYPES = ['spear', 'archer', 'militia'];
   E.UNIT = {
