@@ -1,31 +1,47 @@
 <!DOCTYPE html>
-<html lang="ro">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cronicarul Cetății – Demo</title>
+<title>Chronicle of Ash – Siege of Neamț (Demo)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <div id="app">
-  <header id="topbar">
-    <div class="brand">Cronicarul Cetății <small>Demo · Neamț 1476</small></div>
-    <div id="day"></div>
-    <div id="resources"></div>
-    <button id="mute" title="Sunet" aria-label="Sunet">♪</button>
+  <header id="hud">
+    <div class="brand">Chronicle of Ash<small>Demo · Neamț 1476</small></div>
+    <div id="phases"></div>
+    <div id="res"></div>
+    <div id="tools">
+      <button id="btn-help" class="icon" title="How to play" aria-label="How to play">?</button>
+      <button id="btn-mute" class="icon" title="Sound" aria-label="Sound">♪</button>
+    </div>
   </header>
-  <main id="main">
-    <section id="scene"><div id="scene-caption"></div></section>
-    <section id="card"></section>
-    <aside id="chron">
-      <h2>Cronica cetății</h2>
-      <div id="chron-list"><p class="muted">Pagina e încă goală.</p></div>
+  <div id="stage">
+    <div id="main-col">
+      <div id="view-wrap">
+        <canvas id="view" width="1200" height="560"></canvas>
+        <div id="toast"></div>
+        <div id="modal"></div>
+      </div>
+      <div id="bar">
+        <div id="intel"></div>
+        <div id="ap"></div>
+        <button id="btn-end" class="go">Sound the horn</button>
+      </div>
+    </div>
+    <aside id="side">
+      <nav id="tabs"></nav>
+      <div id="panel"></div>
     </aside>
-  </main>
+  </div>
 </div>
 <script src="js/engine.js"></script>
 <script src="js/data.js"></script>
 <script src="js/audio.js"></script>
+<script src="js/scene.js"></script>
 <script src="js/ui.js"></script>
 </body>
 </html>
