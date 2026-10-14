@@ -215,6 +215,8 @@ Dacă vrei narațiune: ElevenLabs *Text to Speech*, voce masculină matură, cal
 
 ---------------------------------------------------------------------------------------------------
 
+> Fișierele pot fi **.jpg sau .png** (Gemini dă de obicei PNG, e ok). Dimensiunea exactă nu contează: ilustrațiile 16:9 sunt tăiate automat să încapă, iar texturile pot fi orice pătrat.
+
 ## 4. Cum mi le dai
 
 1. Încarcă fișierele în repo, în folderele indicate (pe GitHub: *Add file → Upload files*, pe branch-ul `ccr-ed81453d-wo7sc8`), sau spune-mi unde le-ai pus.

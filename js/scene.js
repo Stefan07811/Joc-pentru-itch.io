@@ -37,7 +37,7 @@
   /* ---------- optional assets ---------- */
   const Assets = { tex: {}, spr: {} };
   let staticDirty = true, castleDirty = true;
-  function loadImg(url, cb) { const i = new Image(); i.onload = () => cb(i); i.onerror = () => {}; i.src = url; }
+  function loadImg(base, cb) { const exts = ['jpg', 'png', 'jpeg', 'webp']; let k = 0; const i = new Image(); i.onload = () => cb(i); i.onerror = () => { k++; if (k < exts.length) i.src = `${base}.${exts[k]}`; }; i.src = `${base}.${exts[0]}`; }
   function keyOut(img) {
     try {
       const c = mk(img.width, img.height), x = c.getContext('2d'); x.drawImage(img, 0, 0);
@@ -51,8 +51,8 @@
       const o = mk(x1 - x0 + 1, y1 - y0 + 1); o.getContext('2d').drawImage(c, x0, y0, o.width, o.height, 0, 0, o.width, o.height); return o;
     } catch (e) { return img; }
   }
-  ['grass', 'dirt', 'rock', 'stone', 'shingle', 'wood'].forEach(n => loadImg(`assets/img/tex/${n}.jpg`, img => { Assets.tex[n] = img; staticDirty = castleDirty = true; }));
-  ['tent_red', 'tent_white', 'pavilion', 'bombard', 'siege_tower', 'house_a', 'house_b', 'church'].forEach(n => loadImg(`assets/img/sprites/${n}.png`, img => { Assets.spr[n] = keyOut(img); }));
+  ['grass', 'dirt', 'rock', 'stone', 'shingle', 'wood'].forEach(n => loadImg(`assets/img/tex/${n}`, img => { Assets.tex[n] = img; staticDirty = castleDirty = true; }));
+  ['tent_red', 'tent_white', 'pavilion', 'bombard', 'siege_tower', 'house_a', 'house_b', 'church'].forEach(n => loadImg(`assets/img/sprites/${n}`, img => { Assets.spr[n] = keyOut(img); }));
   const pat = n => Assets.tex[n] ? ctx.createPattern(Assets.tex[n], 'repeat') : null;
   function sprite(name, x, y, w) { const s = Assets.spr[name]; if (!s) return false; const h = w * s.height / s.width; ctx.drawImage(s, x - w / 2, y - h, w, h); return true; }
 

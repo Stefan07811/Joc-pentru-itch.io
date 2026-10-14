@@ -239,9 +239,10 @@
     return out;
   }
 
-  function banner(path) {
-    const img = h('img', { class: 'banner', src: path, alt: '' });
-    img.addEventListener('error', () => img.remove());
+  function banner(base) {   // tries .jpg, then .png, else shows nothing
+    const exts = ['jpg', 'jpeg', 'png', 'webp']; let i = 0;
+    const img = h('img', { class: 'banner', src: `${base}.${exts[0]}`, alt: '' });
+    img.addEventListener('error', () => { i++; if (i < exts.length) img.src = `${base}.${exts[i]}`; else img.remove(); });
     return img;
   }
   function showEvent(ev) {
@@ -255,7 +256,7 @@
           const r = E.resolveChoice(s, ch);
           Scene.endProps();
           refresh();
-          const card = h('div', { class: 'card' }, banner(`assets/img/events/${ev.id}.jpg`),
+          const card = h('div', { class: 'card' }, banner(`assets/img/events/${ev.id}`),
             h('div', { class: 'art' }, ev.art || '📜'), h('h2', {}, ev.title),
             h('p', { class: 'quote' }, r.text),
             h('div', { class: 'fxs', style: 'display:flex;flex-wrap:wrap;gap:5px;clear:both;margin-top:8px' }, fxChips(r.fx)),
@@ -263,7 +264,7 @@
           modal(card);
         } }, h('div', { class: 'l' }, ch.label), h('div', { class: 'fxs' }, fxChips(ch.fx, !!ch.risk, ch.set))));
       }
-      modal(h('div', { class: 'card' }, banner(`assets/img/events/${ev.id}.jpg`), h('div', { class: 'art' }, ev.art || '📜'), h('h2', {}, ev.title), h('p', {}, ev.text), h('div', { style: 'clear:both' }), box));
+      modal(h('div', { class: 'card' }, banner(`assets/img/events/${ev.id}`), h('div', { class: 'art' }, ev.art || '📜'), h('h2', {}, ev.title), h('p', {}, ev.text), h('div', { style: 'clear:both' }), box));
     });
   }
 
@@ -358,7 +359,7 @@
     Sound.play(good ? 'victory' : 'defeat'); Sound.music(good ? 'music_victory' : 'music_defeat'); Sound.ambience(null);
     Scene.setTime(Math.min(s.day, E.DAYS), good ? 'dawn' : 'night');
     const full = s.chronicle.map(c => `Day ${c.day}. ${c.text}`).join('\n');
-    const card = h('div', { class: 'card' }, banner(`assets/img/endings/${s.over}.jpg`), h('h1', {}, e.title), h('div', { class: 'sub' }, `Day ${Math.min(s.day, E.DAYS)} of ${E.DAYS}`),
+    const card = h('div', { class: 'card' }, banner(`assets/img/endings/${s.over}`), h('h1', {}, e.title), h('div', { class: 'sub' }, `Day ${Math.min(s.day, E.DAYS)} of ${E.DAYS}`),
       h('p', {}, e.text), h('p', {}, `History will remember you as ${ep.legacy}.`),
       h('p', { class: 'note' }, `Truth ${ep.truths} · Glory ${ep.lies} · Silence ${ep.silences} · Debt of lies ${s.lieDebt} · Fallen ${s.deaths}`),
       h('div', { class: 'scroll' }, s.chronicle.length ? s.chronicle.map(c => h('p', {}, h('b', {}, `Day ${c.day}. `), c.text)) : h('p', {}, 'The Chronicle is empty.')),
