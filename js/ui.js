@@ -86,6 +86,8 @@
       const d = w.day - s.day;
       bar.append(h('span', {}, d === 0 ? h('b', {}, 'Assault today: ') : 'Next assault in ', d === 0 ? '' : h('b', {}, `${d} day${d === 1 ? '' : 's'}`), ' · ', w.name));
       const it = E.intel(s);
+      const hh = E.hostProgress(s);
+      bar.append(h('span', { class: 'sub' }, `👑 Prince's host: ${hh.eta === 0 ? 'arrived' : '~' + hh.eta + ' days away'}`));
       bar.append(h('span', { class: 'sub' }, it.exact ? `Scouted: about ${it.lo} attackers, red arrows show where they strike.` : `Estimate: ${it.lo}–${it.hi} attackers. Scout to see exactly where they strike.`));
     } else bar.append(h('span', {}, h('b', {}, 'No more assaults. '), 'Survive until the Prince arrives.'));
     const ap = $('ap'); ap.replaceChildren(h('span', {}, 'Orders'), ...Array.from({ length: E.AP }, (_, i) => h('i', { class: 'pip' + (i < s.ap ? ' on' : '') })));
@@ -96,7 +98,7 @@
 
   /* ---------------- side panel ---------------- */
   function renderTabs() {
-    const names = [['defense', 'Defence'], ['orders', 'Orders'], ['army', 'Army'], ['chron', 'Chronicle']];
+    const names = [['defense', 'Defence'], ['orders', 'Orders'], ['army', 'Army'], ['map', 'Map'], ['chron', 'Chronicle']];
     $('tabs').replaceChildren(...names.map(([k, n]) => h('button', { class: 'tab' + (tab === k ? ' on' : ''), onclick: () => { click(); tab = k; renderSide(); } }, n)));
   }
   function renderSide() {
@@ -107,6 +109,7 @@
     if (tab === 'defense') p.append(defensePanel());
     else if (tab === 'orders') p.append(ordersPanel());
     else if (tab === 'army') p.append(armyPanel());
+    else if (tab === 'map') p.append(mapPanel());
     else p.append(chronPanel());
     p.scrollTop = keep;
   }
@@ -199,6 +202,23 @@
     return box;
   }
 
+  let mapTimer = null;
+  function mapPanel() {
+    const box = h('div');
+    const hp = E.hostProgress(s);
+    box.append(h('div', { class: 'h3' }, 'Moldavia, summer 1476'));
+    const cv = h('canvas', { width: 720, height: 600, class: 'mapcv' });
+    box.append(cv);
+    box.append(h('div', { class: 'kv' }, "👑 Prince Stephen's host", h('b', {}, hp.eta === 0 ? 'has arrived' : `~${hp.eta} day${hp.eta === 1 ? '' : 's'} away`)));
+    box.append(h('div', { class: 'bar' }, h('i', { style: `width:${Math.round(hp.p * 100)}%;background:#6a9ad0` })));
+    box.append(h('p', { class: 'note' }, s.cred >= E.CRED_NEEDED ? 'The Prince trusts your word. His host marches at full speed.' : "The Prince doubts your reports. His host lingers. Raise his trust, with riders and honest chronicles."));
+    clearInterval(mapTimer);
+    const t0 = performance.now();
+    const tick = () => { if (!document.body.contains(cv) || !s) { clearInterval(mapTimer); return; } window.CampaignMap.draw(cv, s, (performance.now() - t0) / 1000); };
+    tick(); mapTimer = setInterval(tick, 80);
+    return box;
+  }
+
   function chronPanel() {
     const box = h('div');
     box.append(h('div', { class: 'h3' }, 'The Chronicle of Neamț'));
@@ -255,6 +275,7 @@
           click();
           const r = E.resolveChoice(s, ch);
           Scene.endProps();
+          Scene.react(r.fx);
           refresh();
           const card = h('div', { class: 'card' }, banner(`assets/img/events/${ev.id}`),
             h('div', { class: 'art' }, ev.art || '📜'), h('h2', {}, ev.title),

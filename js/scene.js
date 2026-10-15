@@ -14,9 +14,9 @@
   const BAST = [650, 725, 875, 950], BR = 30, BH = 80;                 // four semicircular bastions
   const GX = 800;                                                       // gate axis
   const DITCH = { y0: 532, y1: 566 };
-  const REG = { gate: [762, 330, 838, 640], curtain: [596, 440, 1004, 600], east: [920, 150, 1090, 520], cliff: [540, 150, 680, 520] };
-  const LABEL = { cliff: [520, 300], curtain: [615, 635], gate: [800, 705], east: [1112, 300] };
-  const WALK = {
+  let REG = { gate: [762, 330, 838, 640], curtain: [596, 440, 1004, 600], east: [920, 150, 1090, 520], cliff: [540, 150, 680, 520] };
+  let LABEL = { cliff: [520, 300], curtain: [615, 635], gate: [800, 705], east: [1112, 300] };
+  let WALK = {
     cliff: [[[657, 196], [657, 344]]],
     east: [[[943, 196], [943, 344]]],
     curtain: [[[628, 452], [756, 452]], [[844, 452], [972, 452]]],
@@ -55,9 +55,48 @@
   ['grass', 'dirt', 'rock', 'stone', 'shingle', 'wood'].forEach(n => loadImg(`assets/img/tex/${n}`, img => {
     const s = TEXSIZE[n] || 256, c = mk(s, s); c.getContext('2d').drawImage(img, 0, 0, s, s); Assets.tex[n] = c; staticDirty = castleDirty = true;
   }));
-  ['tent_red', 'tent_white', 'pavilion', 'bombard', 'siege_tower', 'house_a', 'house_b', 'church'].forEach(n => loadImg(`assets/img/sprites/${n}`, img => { Assets.spr[n] = keyOut(img); }));
+  ['tent_red', 'tent_white', 'pavilion', 'bombard', 'siege_tower', 'house_a', 'house_b', 'church', 'rubble_a', 'rubble_b', 'fire_barrel', 'banner'].forEach(n => loadImg(`assets/img/sprites/${n}`, img => { Assets.spr[n] = keyOut(img); }));
+  Assets.unit = {};
+  ['spear', 'archer', 'militia', 'azab', 'akinji', 'janissary', 'sapper', 'civ', 'civ2'].forEach(n => loadImg(`assets/img/units/${n}`, img => { Assets.unit[n] = keyOut(img); }));
   const pat = n => Assets.tex[n] ? ctx.createPattern(Assets.tex[n], 'repeat') : null;
   function sprite(name, x, y, w) { const s = Assets.spr[name]; if (!s) return false; const h = w * s.height / s.width; ctx.drawImage(s, x - w / 2, y - h, w, h); return true; }
+
+  /* ---------- painted plate mode ----------
+     If assets/img/plate_day.(jpg|png|webp) exists, the painted image replaces the procedural castle/terrain and the game
+     draws only the living layers on top (soldiers, camp growth, fire, smoke, damage decals, weather, light).
+     All coordinates below are canvas coordinates (1600x900) and are calibrated to the plate; replace assets/plate.json to recalibrate. */
+  const PLATE = { on: false, day: null, night: null, cfg: null };
+  const PLATE_CFG = {
+    unitScale: 0.72,
+    REG: { gate: [660, 380, 900, 480], cliff: [370, 330, 470, 560], curtain: [470, 500, 950, 840], east: [930, 130, 1190, 440] },
+    LABEL: { cliff: [300, 290], curtain: [520, 800], gate: [540, 215], east: [1070, 110] },
+    WALK: {
+      cliff: [[[408, 462], [424, 440], [450, 438], [472, 452], [486, 478]]],
+      curtain: [[[482, 516], [545, 545], [600, 574], [655, 596], [720, 626], [785, 654], [850, 672], [892, 690]]],
+      gate: [[[700, 405], [740, 420], [790, 428], [840, 418], [880, 390]]],
+      east: [[[990, 355], [1040, 325], [1100, 292], [1150, 268]]]
+    },
+    BATT: [{ x: 1330, y: 520 }, { x: 1380, y: 660 }],
+    foot: { cliff: [[420, 500, 38], [480, 470, 38]], curtain: [[500, 610, 44], [600, 668, 44], [700, 720, 44], [800, 770, 44]], gate: [[740, 478, 40], [800, 490, 40]], east: [[1010, 385, 44], [1090, 335, 44]] },
+    impact: { cliff: [470, 430], curtain: [640, 620], gate: [780, 430], east: [1080, 300] },
+    intelTgt: { cliff: [450, 470], curtain: [620, 640], gate: [780, 470], east: [1060, 350] },
+    src: [1450, 600],
+    spawn: [1360, 1560, 480, 800],
+    campFires: [[1462, 800], [1500, 470]],
+    campSmoke: [[1425, 319], [1512, 431], [1525, 737]],
+    campBox: [1340, 1560, 540, 800],
+    burnSpots: [[1250, 325], [1125, 250], [1320, 250]],
+    prop: { envoy: { from: [1580, 740], to: [1020, 780] }, route: [[0, 700], [60, 650], [170, 580], [290, 455], [390, 392]], cart: { from: [1580, 760], to: [1050, 790] } },
+    pavilion: [1500, 800]
+  };
+  function applyPlate() {
+    const c = Object.assign({}, PLATE_CFG, PLATE.cfg || {});
+    PLATE.c = c; REG = c.REG; LABEL = c.LABEL; WALK = c.WALK; BATT = c.BATT; PLATE.on = true; staticDirty = castleDirty = true;
+  }
+  loadImg('assets/img/plate_day', img => { PLATE.day = img; if (PLATE.ready) applyPlate(); else PLATE.pend = true; });
+  loadImg('assets/img/plate_night', img => { PLATE.night = img; });
+  try { fetch('assets/plate.json').then(r => r.ok ? r.json() : null).then(j => { if (j) { PLATE.cfg = j; if (PLATE.on) applyPlate(); } }).catch(() => {}); } catch (e) {}
+  setTimeout(() => { PLATE.ready = true; if (PLATE.day) applyPlate(); }, 0);
 
   /* ---------- state ---------- */
   let cv, mctx, dpr = 1, running = false, tPrev = 0, time = 0;
@@ -413,8 +452,15 @@
   }
 
   /* ---------- figures ---------- */
+  const BODYKEY = {};
   function fig(x, y, sc, o) {
     const bob = o.bob || 0, dir = o.dir || 1;
+    const uk = BODYKEY[o.body], us = uk && Assets.unit && Assets.unit[uk];
+    if (us) {
+      const hgt = 30 * sc, wid = hgt * us.width / us.height, sw = Math.sin(time * 5 + x * 0.13) * (o.anim ? 0.08 : 0.025);
+      ctx.save(); ctx.translate(x, y + bob); ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(0, 0, wid * 0.38, hgt * 0.09, 0, 0, TAU); ctx.fill();
+      ctx.scale(dir, 1); ctx.rotate(sw); ctx.drawImage(us, -wid / 2, -hgt, wid, hgt); ctx.restore(); return;
+    }
     ctx.save(); ctx.translate(x, y + bob); ctx.scale(sc * dir, sc);
     ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(0, 0, 4, 1.6, 0, 0, TAU); ctx.fill();
     ctx.fillStyle = '#1a1511'; ctx.fillRect(-2.2, -4, 1.8, 4); ctx.fillRect(0.4, -4, 1.8, 4);
@@ -440,6 +486,7 @@
     akinji: { body: '#8a5a2c', hat: 'turban', weapon: 'spear' }, janissary: { body: '#2f4f9a', hat: 'bork', weapon: 'sword', shield: '#d6c9a0' },
     sapper: { body: '#5a4632', hat: 'cap', weapon: 'club' }, civ: { body: '#9a8a6a', hat: 'cap', weapon: null }, civ2: { body: '#7a4a5a', hat: null, weapon: null }
   };
+  for (const k in STYLE) BODYKEY[STYLE[k].body] = k;
   function horse(x, y, sc, color, dir, gallop, rider) {
     ctx.save(); ctx.translate(x, y); ctx.scale(sc * dir, sc);
     const leg = Math.sin(gallop * 14) * 3; ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(0, 0, 13, 3, 0, 0, TAU); ctx.fill();
@@ -475,11 +522,31 @@
     playBombard(hits) { return new Promise(res => { let i = 0; const next = () => { if (i >= hits.length) return setTimeout(res, 400); fireBombard(hits[i++]); setTimeout(next, S.fast ? 250 : 900); }; next(); }); },
     playAssault(result, view) { return new Promise(res => startAssault(result, view, res)); },
     clearBodies() { bodies.length = 0; },
-    markDirty() { castleDirty = true; }
+    markDirty() { castleDirty = true; },
+    react(fx) {      // the world answers your decisions
+      fx = fx || {};
+      setTimeout(() => {
+        if ((fx.civ || 0) >= 8) spawnProp('refugees');
+        else if ((fx.food || 0) >= 15 || (fx.arrows || 0) >= 15) spawnProp('cart');
+        if ((fx.cred || 0) >= 4) spawnProp('rider');
+        if ((fx.morale || 0) <= -8) shake = Math.max(shake, 3);
+        if ((fx.villageBurn || 0) > 0.1 && PLATE.on) for (const b of PLATE.c.burnSpots) { emit('fire', b[0], b[1], 6); emit('smoke', b[0], b[1], 6); }
+        if ((fx.food || 0) <= -10 && PLATE.on) { const w = WALK.gate[0][2]; emit('smoke', w[0], w[1] - 10, 14); emit('fire', w[0], w[1] - 6, 6); }
+        for (const sec of SECTORS) if ((fx['wall_' + sec] || 0) < -10 || (fx.wallsAll || 0) < -10) { const p = walkPoint(sec, 0.5); emit('debris', p[0], p[1], 18); emit('dust', p[0], p[1] + 10, 14); shake = Math.max(shake, 7); if (Scene.onSound) Scene.onSound('collapse'); }
+      }, 350);
+    }
   };
 
   /* ---------- props (event actors) ---------- */
   function spawnProp(kind) {
+    if (PLATE.on) {
+      const c = PLATE.c, r = c.prop.route;
+      if (kind === 'envoy') actors.push({ prop: true, kind: 'envoy', x: c.prop.envoy.from[0], y: c.prop.envoy.from[1], tx: c.prop.envoy.to[0], ty: c.prop.envoy.to[1], v: 60, state: 'in' });
+      else if (kind === 'rider') actors.push({ prop: true, kind: 'rider', x: r[0][0], y: r[0][1], tx: r[r.length - 1][0], ty: r[r.length - 1][1], v: 170, state: 'in', route: r.slice(1), exit: r[r.length - 1] });
+      else if (kind === 'cart') actors.push({ prop: true, kind: 'cart', x: c.prop.cart.from[0], y: c.prop.cart.from[1], tx: c.prop.cart.to[0], ty: c.prop.cart.to[1], v: 45, state: 'in' });
+      else if (kind === 'refugees') for (let i = 0; i < 18; i++) actors.push({ prop: true, kind: 'refugee', x: r[0][0] - i * 18, y: r[0][1] + i * 3, tx: r[r.length - 1][0] + (i % 6) * 8, ty: r[r.length - 1][1] + (i % 4) * 7, v: 34 + Math.random() * 10, state: 'in', c: i % 3, route: r.slice(1), exit: r[r.length - 1] });
+      return;
+    }
     if (kind === 'envoy') actors.push({ prop: true, kind: 'envoy', x: 1250, y: 650, tx: 870, ty: 650, v: 60, state: 'in' });
     else if (kind === 'rider') actors.push({ prop: true, kind: 'rider', x: -40, y: 760, tx: 770, ty: 628, v: 170, state: 'in', route: [[250, 740], [450, 708], [700, 662]] });
     else if (kind === 'cart') actors.push({ prop: true, kind: 'cart', x: 1300, y: 690, tx: 860, ty: 650, v: 45, state: 'in' });
@@ -489,10 +556,11 @@
     for (let i = actors.length - 1; i >= 0; i--) {
       const a = actors[i]; if (!a.prop) continue;
       if (a.route && a.route.length && !a.leaving) { const [rx, ry] = a.route[0]; const dx = rx - a.x, dy = ry - a.y, d = Math.hypot(dx, dy); if (d < 6) a.route.shift(); else { a.x += dx / d * a.v * dt; a.y += dy / d * a.v * dt; a.dir = dx >= 0 ? 1 : -1; a.walk = (a.walk || 0) + dt; } continue; }
-      const toX = a.leaving ? (a.kind === 'rider' || a.kind === 'refugee' ? GX : 1700) : a.tx, toY = a.leaving ? (a.kind === 'rider' || a.kind === 'refugee' ? 540 : a.ty) : a.ty;
+      const toX = a.leaving ? (a.kind === 'rider' || a.kind === 'refugee' ? (a.exit ? a.exit[0] : GX) : 1700) : a.tx, toY = a.leaving ? (a.kind === 'rider' || a.kind === 'refugee' ? (a.exit ? a.exit[1] : 540) : a.ty) : a.ty;
       const dx = toX - a.x, dy = toY - a.y, d = Math.hypot(dx, dy);
-      if (d > 3) { a.x += dx / d * a.v * dt; a.y += dy / d * a.v * dt; a.dir = dx >= 0 ? 1 : -1; a.walk = (a.walk || 0) + dt; if (a.leaving && (a.kind === 'rider' || a.kind === 'refugee') && a.y < 575) a.fade = (a.fade == null ? 1 : a.fade) - dt * 2.2; }
+      if (d > 3) { a.x += dx / d * a.v * dt; a.y += dy / d * a.v * dt; a.dir = dx >= 0 ? 1 : -1; a.walk = (a.walk || 0) + dt; if (a.leaving && (a.kind === 'rider' || a.kind === 'refugee') && (a.exit ? true : a.y < 575)) a.fade = (a.fade == null ? 1 : a.fade) - dt * 2.2; }
       else if (a.leaving) a.fade = 0;
+      if (a.exit && a.leaving && a.fade == null && d <= 3) a.fade = 0;
       if (a.fade != null && a.fade <= 0) actors.splice(i, 1);
       else if (a.leaving && a.x > 1690) actors.splice(i, 1);
     }
@@ -516,10 +584,10 @@
       if (p.t >= 1) { if (p.kind === 'stone') { emit('dust', p.x1, p.y1, 14); emit('debris', p.x1, p.y1, 12); shake = Math.max(shake, 6); if (p.onHit) p.onHit(); flashes.push({ x: p.x1, y: p.y1, t: 0, max: 0.35, r: 60 }); } proj.splice(i, 1); }
     }
   }
-  const BATT = [{ x: 1085, y: 505 }, { x: 1062, y: 598 }];
+  let BATT = [{ x: 1085, y: 505 }, { x: 1062, y: 598 }];
   function fireBombard(h) {
     const bi = Math.min(Math.random() < 0.5 ? 0 : 1, Math.max(0, (V ? V.bombards : 1) - 1)); const b = BATT[bi];
-    const imp = h.sector === 'gate' ? [GX + (Math.random() - 0.5) * 40, 430] : h.sector === 'east' ? [943, 200 + Math.random() * 140] : [lerp(640, 960, Math.random()), 470];
+    const imp = PLATE.on ? PLATE.c.impact[h.sector] : h.sector === 'gate' ? [GX + (Math.random() - 0.5) * 40, 430] : h.sector === 'east' ? [943, 200 + Math.random() * 140] : [lerp(640, 960, Math.random()), 470];
     flashes.push({ x: b.x - 22, y: b.y - 18, t: 0, max: 0.3, r: 55 }); emit('smoke', b.x - 22, b.y - 18, 10);
     proj.push({ x0: b.x - 22, y0: b.y - 18, x1: imp[0], y1: imp[1], t: 0, dur: 1.0, kind: 'stone', arc: 120, onHit: () => { if (Scene.onSound) Scene.onSound('bombard'); } });
     if (Scene.onSound) Scene.onSound('boom');
@@ -529,6 +597,7 @@
   const FATE = { repelled: [0.7, 0.3, 0], held: [0.45, 0.45, 0.1], bloody: [0.3, 0.4, 0.3], breach: [0.15, 0.35, 0.5], collapse: [0.05, 0.25, 0.7] };
   function route(sec) {
     const j = () => (Math.random() - 0.5);
+    if (PLATE.on) { const f = PLATE.c.foot[sec], p = f[Math.floor(Math.random() * f.length)], sp = PLATE.c.spawn; return { way: [[lerp(sp[0], p[0], 0.6) + j() * 60, lerp(sp[2], p[1], 0.6) + j() * 40]], tx: p[0] + j() * 30, ty: p[1] + j() * 10, H: p[2], ladder: sec !== 'gate' || Math.random() < 0.7 }; }
     if (sec === 'gate') return { way: [[1000, 660], [880, 640]], tx: GX + j() * 26, ty: 582 + Math.random() * 24, H: 0, ladder: false };
     if (sec === 'curtain') { let x; do { x = lerp(630, 975, Math.random()); } while (x > 762 && x < 838); return { way: [[1020, 665], [x + 60, 650]], tx: x, ty: 582 + Math.random() * 8, H: O.h + 4, ladder: Math.random() < 0.8 }; }
     if (sec === 'east') return { way: [[1130, 520], [1050, 440]], tx: 962 + j() * 6, ty: 250 + Math.random() * 190, H: F.h, ladder: Math.random() < 0.85 };
@@ -543,10 +612,10 @@
       for (let i = 0; i < n; i++) {
         const roll = Math.random(), fate = roll < f[0] ? 'early' : roll < f[0] + f[1] ? 'wall' : 'top';
         const rt = route(r.sector);
-        actors.push({ assault: true, sector: r.sector, kind: pick(), x: 1100 + Math.random() * 200, y: 540 + Math.random() * 200, way: rt.way.slice(), tx: rt.tx, ty: rt.ty, WH: rt.H, v: 70 + Math.random() * 30, delay: Math.random() * 1.6, state: 'wait', fate, ladder: rt.ladder, climb: 0, die: 0, dir: -1, hold: 0 });
+        actors.push({ assault: true, sector: r.sector, kind: pick(), x: PLATE.on ? PLATE.c.spawn[0] + Math.random() * (PLATE.c.spawn[1] - PLATE.c.spawn[0]) : 1100 + Math.random() * 200, y: PLATE.on ? PLATE.c.spawn[2] + Math.random() * (PLATE.c.spawn[3] - PLATE.c.spawn[2]) : 540 + Math.random() * 200, way: rt.way.slice(), tx: rt.tx, ty: rt.ty, WH: rt.H, v: 70 + Math.random() * 30, delay: Math.random() * 1.6, state: 'wait', fate, ladder: rt.ladder, climb: 0, die: 0, dir: -1, hold: 0 });
       }
     }
-    if (result.index >= 4) actors.push({ assault: true, siege: true, x: 1090, y: 640, tx: 1018, ty: 470, state: 'wait', delay: 0.5, v: 14, kind: 'tower' });
+    if (result.index >= 4) actors.push({ assault: true, siege: true, x: PLATE.on ? 1400 : 1090, y: PLATE.on ? 700 : 640, tx: PLATE.on ? 1150 : 1018, ty: PLATE.on ? 470 : 470, state: 'wait', delay: 0.5, v: 14, kind: 'tower' });
     anim = { t: 0, result, resolve, view, volleyT: 0, collapseFx: {} };
     if (Scene.onSound) Scene.onSound('horn');
   }
@@ -625,7 +694,41 @@
     ctx.fillStyle = '#17100a'; ctx.beginPath(); ctx.moveTo(x - 4, y); ctx.lineTo(x - 3, y - 8); ctx.lineTo(x + 3, y - 8); ctx.lineTo(x + 4, y); ctx.fill();
     ctx.fillStyle = '#d6b050'; ctx.beginPath(); ctx.arc(x, y - 36, 2, 0, TAU); ctx.fill();
   }
+  function drawCampPlate() {
+    const c = PLATE.c, hasSpr = !!(Assets.spr.tent_red || Assets.spr.tent_white);
+    // extra tents as the siege grows (only when painted tent sprites exist, so nothing clashes with the painting)
+    if (hasSpr) {
+      const base = 6, extra = clamp(Math.round(V.tents) - base, 0, D.tents.length);
+      D.pt = D.pt || D.tents.map(tt => ({ x: lerp(c.campBox[0], c.campBox[1], ((tt.x - 1180) / 380 + 1) % 1), y: lerp(c.campBox[2], c.campBox[3], tt.order), w: tt.w, c: tt.c, order: tt.order }));
+      const list = D.pt.slice().sort((a, b) => a.order - b.order).slice(0, extra).sort((a, b) => a.y - b.y);
+      for (const tt of list) tent(tt);
+    }
+    for (const [fx, fy] of c.campFires) { if (Math.random() < 0.4) emit('fire', fx, fy, 1); if (Math.random() < 0.08) emit('smoke', fx, fy - 4, 1); }
+    for (const [sx, sy] of c.campSmoke) if (Math.random() < 0.07) emit('smoke', sx, sy, 1);
+    for (let i = 0; i < V.bombards; i++) {
+      const b = BATT[i];
+      if (!sprite('bombard', b.x - 6, b.y + 8, 110)) {
+        ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(b.x, b.y + 6, 44, 9, 0, 0, TAU); ctx.fill();
+        ctx.fillStyle = '#5a3f1f'; ctx.fillRect(b.x - 18, b.y - 4, 48, 10);
+        ctx.save(); ctx.translate(b.x - 8, b.y - 8); ctx.rotate(Math.atan2(-30, -70)); const g = ctx.createLinearGradient(0, -7, 0, 7); g.addColorStop(0, '#4a4a52'); g.addColorStop(1, '#1d1d22'); ctx.fillStyle = g; ctx.fillRect(-4, -7, 64, 14); ctx.restore();
+        ctx.fillStyle = '#3a2a18'; ctx.beginPath(); ctx.arc(b.x - 8, b.y + 6, 7, 0, TAU); ctx.arc(b.x + 20, b.y + 6, 7, 0, TAU); ctx.fill();
+      }
+      fig(b.x + 28, b.y + 12, c.unitScale, { body: '#8f2a22', hat: 'turban', dir: -1 });
+    }
+    if (V.day >= 9 && Assets.spr.pavilion) sprite('pavilion', c.pavilion[0], c.pavilion[1], 160);
+    // burning farms in the valley follow the village-burn value
+    const nb = Math.round(V.villageBurn * c.burnSpots.length * 1.5);
+    for (let i = 0; i < Math.min(nb, c.burnSpots.length); i++) { const [bx, by] = c.burnSpots[i]; if (Math.random() < 0.5) emit('fire', bx, by, 1); if (Math.random() < 0.3) emit('smoke', bx, by - 6, 1); }
+    if (!anim) {
+      const n = clamp(Math.round(V.tents * 0.9), 5, 30), bx0 = c.campBox[0], bx1 = c.campBox[1], by0 = c.campBox[2], by1 = c.campBox[3];
+      for (let i = 0; i < n; i++) {
+        const bx = lerp(bx0, bx1, ((i * 0.6180339) % 1)), by = lerp(by0, by1, ((i * 0.4142) % 1)), kind = i % 5 === 0 ? 'janissary' : i % 3 === 0 ? 'akinji' : 'azab', st = STYLE[kind];
+        fig(bx + Math.sin(time * 0.3 + i) * 14, by, c.unitScale * (0.9 + by / 2400), { body: st.body, hat: st.hat, weapon: st.weapon, shield: st.shield, bob: Math.sin(time * 4 + i) * 0.6, dir: Math.cos(time * 0.3 + i) > 0 ? 1 : -1 });
+      }
+    }
+  }
   function drawCamp() {
+    if (PLATE.on) return drawCampPlate();
     const count = clamp(Math.round(V.tents), 6, D.tents.length);
     if (!D.tentsDrawn || D.tentsCount !== count) { D.tentsCount = count; D.tentsDrawn = D.tents.slice().sort((a, b) => a.order - b.order).slice(0, count).sort((a, b) => a.y - b.y); }
     // gabions + bombard batteries + trench
@@ -672,6 +775,23 @@
     for (const f of D.fields) if (V.villageBurn > f.burn * 0.8) { ctx.fillStyle = 'rgba(25,20,16,.78)'; ctx.fillRect(f.x, f.y, f.w, f.h); if (Math.random() < 0.006) emit('smoke', f.x + 8, f.y + Math.random() * f.h, 1); }
     if (V.villageBurn < 0.5) { fig(180, 748, 1.0, { body: STYLE.civ.body, hat: 'cap', dir: 1, bob: Math.sin(time * 2) * 0.6 }); fig(205, 752, 1.0, { body: STYLE.civ2.body, dir: -1, bob: Math.sin(time * 2 + 1) * 0.6 }); }
   }
+  function drawPlateDamage() {
+    for (const sec of SECTORS) {
+      const hp = V.walls[sec], dmg = 1 - hp / 100, fort = V.fort[sec];
+      const pts = WALK[sec][0];
+      if (fort >= 1) { ctx.strokeStyle = 'rgba(92,64,34,.95)'; ctx.lineWidth = 5; ctx.lineCap = 'butt'; ctx.beginPath(); pts.forEach((q, i) => i ? ctx.lineTo(q[0], q[1] - 6) : ctx.moveTo(q[0], q[1] - 6)); ctx.stroke(); ctx.strokeStyle = 'rgba(52,34,16,.9)'; ctx.lineWidth = 1.5; ctx.stroke(); }
+      if (fort >= 2) { ctx.fillStyle = 'rgba(70,46,24,.95)'; for (let k = 0; k < pts.length; k++) for (let j = 0; j < 3 * fort; j++) ctx.fillRect(pts[k][0] - 18 + j * 11, pts[k][1] + 4, 2.5, 12); }
+      if (fort >= 3) { ctx.fillStyle = '#c2483a'; const q = pts[0]; ctx.fillRect(q[0] - 2, q[1] - 30, 2.5, 26); ctx.beginPath(); ctx.moveTo(q[0], q[1] - 30); ctx.lineTo(q[0] + 14, q[1] - 26); ctx.lineTo(q[0], q[1] - 22); ctx.fill(); }
+      if (dmg < 0.18) continue;
+      for (const b of breaks(sec, hp)) {
+        const p = walkPoint(sec, b.f), r = 16 + dmg * 26;
+        const g = ctx.createRadialGradient(p[0], p[1] + 6, 2, p[0], p[1] + 6, r); g.addColorStop(0, `rgba(28,20,14,${0.55 + dmg * 0.35})`); g.addColorStop(1, 'rgba(28,20,14,0)'); ctx.fillStyle = g; ctx.fillRect(p[0] - r, p[1] + 6 - r, r * 2, r * 2);
+        ctx.strokeStyle = `rgba(30,22,16,${0.5 + dmg * 0.4})`; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(p[0] - 5, p[1] - 2); ctx.lineTo(p[0] + 2, p[1] + 12); ctx.lineTo(p[0] - 4, p[1] + 24); ctx.stroke();
+        const q = rng(Math.round(p[0]) * 7 + Math.round(p[1]));
+        for (let i = 0; i < 5 + dmg * 8; i++) { const sx = p[0] + (q() - 0.5) * r * 1.6, sy = p[1] + 14 + q() * r * 0.8; const spr = Assets.spr[q() < 0.5 ? 'rubble_a' : 'rubble_b']; if (spr) sprite(q() < 0.5 ? 'rubble_a' : 'rubble_b', sx, sy, 14 + q() * 12); else { ctx.fillStyle = q() < 0.5 ? '#7b7366' : '#5a544a'; ctx.fillRect(sx, sy, 3 + q() * 4, 2 + q() * 3); } }
+      }
+    }
+  }
   function drawBodies() { for (const b of bodies) { ctx.fillStyle = b.c < 0.5 ? 'rgba(46,28,22,.85)' : 'rgba(64,42,30,.85)'; ctx.fillRect(b.x - 4, b.y, 8, 3); ctx.fillStyle = 'rgba(180,170,150,.7)'; ctx.fillRect(b.x + 3, b.y, 2, 2); } }
 
   function defenderList(sec) {
@@ -687,10 +807,10 @@
         const [px, py] = walkPoint(sec, (i + 0.5) / k), st = STYLE[t];
         const fighting = anim && anim.t > 2.4, a = fighting && t !== 'archer' ? Math.sin(time * 9 + i) * 1.8 : 0;
         const side = sec === 'cliff' ? 1 : sec === 'east' ? -1 : 1;
-        fig(px + (i % 2 ? 2 : -2), py + 5, 0.85, { body: st.body, hat: st.hat, weapon: st.weapon, shield: st.shield, bob: Math.sin(time * 2.2 + i * 1.7) * 0.5, dir: sec === 'cliff' ? -1 : 1, anim: a });
+        fig(px + (i % 2 ? 2 : -2), py + 5, PLATE.on ? PLATE.c.unitScale : 0.85, { body: st.body, hat: st.hat, weapon: st.weapon, shield: st.shield, bob: Math.sin(time * 2.2 + i * 1.7) * 0.5, dir: sec === 'cliff' ? -1 : 1, anim: a });
       });
     }
-    if (secs.includes('cliff')) { const py = 196 + ((time * 8) % 140); fig(F.x1 - 7, py, 0.8, { body: '#3b5e8c', hat: 'helm', weapon: 'spear', dir: 1 }); }
+    if (!PLATE.on && secs.includes('cliff')) { const py = 196 + ((time * 8) % 140); fig(F.x1 - 7, py, 0.8, { body: '#3b5e8c', hat: 'helm', weapon: 'spear', dir: 1 }); }
   }
 
   function drawShadows(sunH, tod) {
@@ -819,10 +939,10 @@
     if (S.mode !== 'game' || !S.showLabels) return;
     ctx.save();
     if (S.intel && !anim) {
-      const tgt = { gate: [GX, 600], curtain: [700, 590], east: [975, 420], cliff: [600, 560] };
+      const tgt = PLATE.on ? PLATE.c.intelTgt : { gate: [GX, 600], curtain: [700, 590], east: [975, 420], cliff: [600, 560] };
       for (const sec of SECTORS) {
         const w = S.intel.weights[sec]; if (w < 0.05) continue;
-        const [ex, ey] = tgt[sec], sx = 1090, sy = 690, th = clamp(w * 16, 2, 9);
+        const [ex, ey] = tgt[sec], sx = PLATE.on ? PLATE.c.src[0] : 1090, sy = PLATE.on ? PLATE.c.src[1] : 690, th = clamp(w * 16, 2, 9);
         ctx.strokeStyle = `rgba(214,70,50,${S.intel.exact ? 0.72 : 0.42})`; ctx.fillStyle = ctx.strokeStyle; ctx.lineWidth = th; ctx.setLineDash(S.intel.exact ? [] : [10, 8]); ctx.lineCap = 'round'; ctx.lineDashOffset = -((time * 26) % 18);
         ctx.beginPath(); ctx.moveTo(sx, sy); ctx.quadraticCurveTo((sx + ex) / 2, Math.max(ey, sy) + 60 - w * 40, ex + 14, ey + 14); ctx.stroke(); ctx.setLineDash([]);
         ctx.beginPath(); ctx.moveTo(ex - 8, ey - 6); ctx.lineTo(ex + 22, ey + 8); ctx.lineTo(ex - 4, ey + 22); ctx.closePath(); ctx.fill();
@@ -830,7 +950,8 @@
     }
     for (const sec of SECTORS) {
       const r = REG[sec], hot = S.hover === sec, sel = S.selected === sec;
-      if (hot || sel) { ctx.fillStyle = sel ? 'rgba(232,190,90,.14)' : 'rgba(255,255,255,.08)'; ctx.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]); ctx.strokeStyle = sel ? 'rgba(232,190,90,.9)' : 'rgba(255,255,255,.45)'; ctx.lineWidth = sel ? 2 : 1; ctx.setLineDash([8, 5]); ctx.strokeRect(r[0] + 1, r[1] + 1, r[2] - r[0] - 2, r[3] - r[1] - 2); ctx.setLineDash([]); }
+      if (PLATE.on) { if (hot || sel) { const pts = WALK[sec][0]; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = sel ? 'rgba(240,200,100,.35)' : 'rgba(255,255,255,.22)'; ctx.lineWidth = 16; ctx.beginPath(); pts.forEach((q, i) => i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])); ctx.stroke(); ctx.strokeStyle = sel ? 'rgba(240,200,100,.95)' : 'rgba(255,255,255,.7)'; ctx.lineWidth = 2.5; ctx.setLineDash([9, 6]); ctx.stroke(); ctx.setLineDash([]); } }
+      else if (hot || sel) { ctx.fillStyle = sel ? 'rgba(232,190,90,.14)' : 'rgba(255,255,255,.08)'; ctx.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]); ctx.strokeStyle = sel ? 'rgba(232,190,90,.9)' : 'rgba(255,255,255,.45)'; ctx.lineWidth = sel ? 2 : 1; ctx.setLineDash([8, 5]); ctx.strokeRect(r[0] + 1, r[1] + 1, r[2] - r[0] - 2, r[3] - r[1] - 2); ctx.setLineDash([]); }
       plaque(sec);
     }
     ctx.restore();
@@ -865,11 +986,19 @@
     const tod = ((clock % 1) + 1) % 1, sunH = Math.sin((tod - 0.25) * TAU);
     V.__sunH = sunH; V.__night = sunH < 0.05;
     const dark = clamp(0.6 * (1 - smooth(-0.22, 0.28, sunH)), 0, 0.6) + (V.fog || 0) * 0.04;
-    if (staticDirty || !terrain) buildTerrain();
-    if (castleDirty || !layers) { const prev = ctx; renderCastle(); ctx = prev; }
+    if (!PLATE.on) { if (staticDirty || !terrain) buildTerrain(); if (castleDirty || !layers) { const prev = ctx; renderCastle(); ctx = prev; } }
     ctx = mctx;
     ctx.save();
     if (shake > 0.1) ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+    if (PLATE.on) {
+      ctx.drawImage(PLATE.day, 0, 0, W, H);
+      if (PLATE.night && dark > 0.04) { ctx.globalAlpha = clamp(dark / 0.55, 0, 1); ctx.drawImage(PLATE.night, 0, 0, W, H); ctx.globalAlpha = 1; }
+      drawPlateDamage(); drawBodies(); drawDefenders(SECTORS);
+      for (const sec of SECTORS) if (V.walls[sec] < 40) for (const p of damagePoints(sec)) if (Math.random() < 0.22) { emit('fire', p[0], p[1], 1); if (Math.random() < 0.5) emit('smoke', p[0], p[1] - 4, 1); }
+      if (Math.random() < 0.03) { const w = WALK.gate[0][2]; emit('smoke', w[0], w[1] - 40, 1); }
+      drawCamp(); drawActors(); drawProjectiles(); drawParts(); drawBirds(); drawFireParts(dark); drawWeather(dt, sunH); drawGrading(PLATE.night ? dark * 0.5 : dark, sunH); drawLights(dark);
+      ctx.restore(); drawOverlay(); return;
+    }
     ctx.drawImage(terrain, 0, 0, W, H);
     drawRiverShimmer();
     drawVillage();

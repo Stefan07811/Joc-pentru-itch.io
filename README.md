@@ -26,6 +26,9 @@ Zip the contents of this folder (index.html, css/, js/, assets/) and upload as "
 - `js/audio.js` – optional sounds
 - `tools/sim.js` – balance simulation (`node tools/sim.js`)
 
+## Painted mode
+If `assets/img/plate_day.(jpg|png|webp)` exists, the game uses the painted plate as the world and draws living layers on top: soldiers, camp growth, fire, smoke, damage decals, weather and light. Painted units go in `assets/img/units/`, props in `assets/img/sprites/`, the campaign map in `assets/img/map.*`. Positions for a new plate are set in `assets/plate.json` (see `PLATE_CFG` in `js/scene.js`). Prompts: `docs/GEMINI_PROMPTS_V2.md`.
+
 ## Optional assets (see docs/ASSET_GUIDE.md for exact Gemini / ElevenLabs prompts)
 The game is fully playable with procedural art. Sounds are optional MP3s in `assets/audio/`:
 `music_menu`, `music_game`, `music_battle`, `ambience`, `sfx_click`, `sfx_quill`, `sfx_horn`, `sfx_boom`, `sfx_impact`, `sfx_clash`,

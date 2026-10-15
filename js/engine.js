@@ -411,6 +411,13 @@
     return log;
   };
 
+  /* Prince Stephen's relief host: marches from Suceava toward Neamț; the more he trusts your reports, the faster it comes. */
+  E.hostProgress = function (s) {
+    const speed = clamp(s.cred / E.CRED_NEEDED, 0.5, 1.3), step = speed / (E.DAYS - 1);
+    const p = clamp((Math.min(s.day, E.DAYS) - 1) * step, 0, 1);
+    return { p, speed, eta: p >= 1 ? 0 : Math.ceil((1 - p) / step) };
+  };
+
   E.epilogue = function (s) {
     const total = s.truths + s.lies + s.silences || 1;
     const legacy = s.lies / total >= 0.5 ? 'the Teller of Legends' : s.truths / total >= 0.6 ? 'the Honest Chronicler' : 'the Careful Chronicler';
