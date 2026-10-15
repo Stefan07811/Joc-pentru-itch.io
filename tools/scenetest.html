@@ -1,5 +1,5 @@
-<!doctype html><html><meta charset="utf-8"><body style="margin:0;background:#000"><canvas id="c" style="width:1600px;height:900px"></canvas>
-<script src="../js/engine.js"></script><script src="../js/data.js"></script><script src="../js/scene.js"></script>
+<!doctype html><html><meta charset="utf-8"><base href="../"><body style="margin:0;background:#000"><canvas id="c" style="width:1600px;height:900px"></canvas>
+<script src="js/engine.js"></script><script src="js/data.js"></script><script src="js/scene.js"></script>
 <script>
 const s=Engine.newGame(7);
 function view(s){return {day:s.day,walls:{...s.walls},fort:{...s.fort},garrison:JSON.parse(JSON.stringify(s.garrison)),tents:6+s.camp,bombards:s.bombards,villageBurn:s.villageBurn,deaths:s.deaths,morale:s.morale,weather:s.weather};}
