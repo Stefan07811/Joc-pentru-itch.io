@@ -51,7 +51,10 @@
       const o = mk(x1 - x0 + 1, y1 - y0 + 1); o.getContext('2d').drawImage(c, x0, y0, o.width, o.height, 0, 0, o.width, o.height); return o;
     } catch (e) { return img; }
   }
-  ['grass', 'dirt', 'rock', 'stone', 'shingle', 'wood'].forEach(n => loadImg(`assets/img/tex/${n}`, img => { Assets.tex[n] = img; staticDirty = castleDirty = true; }));
+  const TEXSIZE = { grass: 300, dirt: 256, rock: 256, stone: 280, shingle: 200, wood: 200 };
+  ['grass', 'dirt', 'rock', 'stone', 'shingle', 'wood'].forEach(n => loadImg(`assets/img/tex/${n}`, img => {
+    const s = TEXSIZE[n] || 256, c = mk(s, s); c.getContext('2d').drawImage(img, 0, 0, s, s); Assets.tex[n] = c; staticDirty = castleDirty = true;
+  }));
   ['tent_red', 'tent_white', 'pavilion', 'bombard', 'siege_tower', 'house_a', 'house_b', 'church'].forEach(n => loadImg(`assets/img/sprites/${n}`, img => { Assets.spr[n] = keyOut(img); }));
   const pat = n => Assets.tex[n] ? ctx.createPattern(Assets.tex[n], 'repeat') : null;
   function sprite(name, x, y, w) { const s = Assets.spr[name]; if (!s) return false; const h = w * s.height / s.width; ctx.drawImage(s, x - w / 2, y - h, w, h); return true; }
